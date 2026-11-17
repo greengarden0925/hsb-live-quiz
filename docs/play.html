@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>課堂搶答｜學生</title><link rel="stylesheet" href="style.css"></head>
+<body class="play"><main>
+<p id="conn" class="err"></p>
+<section id="s-loading" data-screen><h1>連線中…</h1></section>
+<section id="s-pin" data-screen hidden><h1>輸入場次碼</h1><input id="pin" inputmode="numeric" maxlength="6" autocomplete="off"><button id="btn-pin">下一步</button><p class="err" id="pin-err"></p></section>
+<section id="s-id" data-screen hidden><h1>輸入學號</h1><input id="sid" autocomplete="off" autocapitalize="characters"><button id="btn-sid">查詢</button><p class="err" id="sid-err"></p></section>
+<section id="s-confirm" data-screen hidden><h1>你是 <span id="confirm-name"></span> 嗎？</h1><button id="btn-yes">是，進場</button><button id="btn-no" class="secondary">不是，重新輸入</button><p class="err" id="confirm-err"></p></section>
+<section id="s-wait" data-screen hidden><h1 id="wait-msg">已進場，等待老師開始…</h1><p id="me-line"></p></section>
+<section id="s-question" data-screen hidden><div class="timer" id="p-timer"></div><p class="qtext" id="p-q"></p><div class="choices" id="p-choices"></div><p id="p-status"></p></section>
+<section id="s-result" data-screen hidden><h1 id="r-title"></h1><p id="r-detail"></p><p id="r-expl"></p><p id="r-rank"></p></section>
+</main><script type="module" src="dist/play.js"></script></body></html>
