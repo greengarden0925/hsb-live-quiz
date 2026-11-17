@@ -1,1 +1,70 @@
-{ "rules": { ".read": false, ".write": false } }
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "admins": {
+      "$uid": { ".read": "auth != null && auth.uid === $uid" }
+    },
+    "config": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+    },
+    "banks": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+    },
+    "roster": {
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$sid": { ".read": "auth != null" }
+    },
+    "rooms": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".indexOn": ["meta/hostUid"],
+      "$pin": {
+        ".read": "auth != null",
+        "meta": {
+          ".write": "auth != null && root.child('admins').child(auth.uid).val() === true && (!data.exists() || data.child('hostUid').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['ep','title','hostUid','status','qIndex','qCount']) && newData.child('hostUid').val() === auth.uid && newData.child('status').val().matches(/^(lobby|question|reveal|leaderboard|final)$/)"
+        },
+        "current": {
+          ".write": "auth != null && root.child('rooms').child($pin).child('meta/hostUid').val() === auth.uid",
+          ".validate": "newData.hasChildren(['qIndex','qKey','text','options','timeLimit','startAt']) && newData.child('startAt').val() === now && newData.child('timeLimit').isNumber() && newData.child('timeLimit').val() >= 5 && newData.child('timeLimit').val() <= 120"
+        },
+        "reveal": {
+          ".write": "auth != null && root.child('rooms').child($pin).child('meta/hostUid').val() === auth.uid"
+        },
+        "scores": {
+          ".write": "auth != null && root.child('rooms').child($pin).child('meta/hostUid').val() === auth.uid"
+        },
+        "claims": {
+          "$sid": {
+            ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid && root.child('roster').child($sid).exists()) || (!newData.exists() && root.child('rooms').child($pin).child('meta/hostUid').val() === auth.uid))"
+          }
+        },
+        "players": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['studentId','name','joinedAt']) && root.child('rooms').child($pin).child('claims').child(newData.child('studentId').val()).val() === auth.uid && root.child('roster').child(newData.child('studentId').val()).child('name').val() === newData.child('name').val() && newData.child('joinedAt').val() === now"
+          }
+        },
+        "presence": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.val() === true"
+          }
+        },
+        "answers": {
+          "$q": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && !data.exists() && newData.exists()",
+              ".validate": "newData.hasChildren(['choice','at']) && (newData.child('choice').val() === 0 || newData.child('choice').val() === 1 || newData.child('choice').val() === 2 || newData.child('choice').val() === 3) && newData.child('at').val() === now && root.child('rooms').child($pin).child('meta/status').val() === 'question' && root.child('rooms').child($pin).child('current/qKey').val() === $q && now <= root.child('rooms').child($pin).child('current/startAt').val() + root.child('rooms').child($pin).child('current/timeLimit').val() * 1000 + 1000 && root.child('rooms').child($pin).child('players').child(auth.uid).exists()",
+              "choice": { ".validate": true },
+              "at": { ".validate": true },
+              "$other": { ".validate": false }
+            }
+          }
+        }
+      }
+    }
+  }
+}
