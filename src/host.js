@@ -17,6 +17,8 @@ onValue(ref(db, '.info/serverTimeOffset'), (s) => { S.offset = s.val() || 0; });
 $('#btn-login').onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).catch((e) => { $('#login-err').textContent = '登入失敗：' + e.message; });
 onAuthStateChanged(auth, async (user) => {
   if (!user) return show('s-login');
+  // 同一瀏覽器開過學生端會留下匿名身分；老師端只接受 Google 登入
+  if (user.isAnonymous) { $('#login-err').textContent = ''; return show('s-login'); }
   S.uid = user.uid;
   const isAdmin = (await get(ref(db, `admins/${user.uid}`))).val() === true;
   if (!isAdmin) { $('#login-err').textContent = `此帳號尚未設為老師。請把這個 UID 加入資料庫 /admins：\n${user.uid}`; return show('s-login'); }
