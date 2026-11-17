@@ -53,6 +53,7 @@ describe('題庫、設定、名單', () => {
   });
   it('學生無法列出整份名單，但可讀單筆', async () => {
     await assertFails(as('stu').ref('roster').get());
+    await assertSucceeds(as('teacher').ref('roster').get());
     await assertSucceeds(as('stu').ref('roster/s001').get());
   });
   it('未登入者讀不到單筆名單', async () => {

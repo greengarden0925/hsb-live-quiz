@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>課程 Dashboard｜健康社會行為學課堂搶答</title><link rel="stylesheet" href="style.css"></head>
+<body class="dash"><main>
+<header class="dash-head">
+  <div><h1>健康社會行為學｜課程 Dashboard</h1><p class="muted" id="dash-sub">學生課堂搶答的作答分析</p></div>
+  <div class="dash-actions"><a class="btn secondary" href="host.html">回老師端</a></div>
+</header>
+<p class="demo-banner" id="demo-banner" hidden>⚠ 示範資料：以下學生與作答都是程式隨機產生，只用來預覽版面。</p>
+
+<section id="d-login" hidden><button id="d-btn-login" class="btn">使用 Google 帳號登入</button><p class="err" id="d-err"></p></section>
+<p id="d-loading">讀取資料中…</p>
+
+<div id="d-main" hidden>
+  <div class="filters">
+    <label>集數 <select id="f-ep"><option value="">全部</option></select></label>
+    <details class="sess-pick"><summary id="f-sess-sum">納入的場次</summary><div id="f-sess"></div></details>
+    <button class="btn secondary" id="btn-export">下載分析 CSV</button>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="t-overview" class="on">各集總覽</button>
+    <button role="tab" data-tab="t-questions">題目與概念診斷</button>
+    <button role="tab" data-tab="t-students">學生個人分析</button>
+    <button role="tab" data-tab="t-speed">作答速度分析</button>
+  </nav>
+
+  <section id="t-overview" class="tab">
+    <div class="tiles" id="tiles"></div>
+    <div class="card"><h2>各集平均答對率</h2><div id="c-ep" class="chart"></div><p class="note">虛線為 60%。滑鼠移到長條上可看場次數與人數。</p></div>
+    <div class="card"><h2>各集明細</h2><table id="tb-ep"></table></div>
+    <div class="card"><h2>場次紀錄</h2><table id="tb-sess"></table></div>
+  </section>
+
+  <section id="t-questions" class="tab" hidden>
+    <div class="card"><h2>最需要加強的概念（答對率由低到高）</h2><table id="tb-concept"></table></div>
+    <div class="card"><h2>各題作答分析</h2><p class="note">選項長條顯示各選項被選的人數，✓ 為正解；「主要誘答」是最多人選的錯誤選項。</p><table id="tb-q"></table></div>
+  </section>
+
+  <section id="t-students" class="tab" hidden>
+    <div class="tiles" id="tiles-stu"></div>
+    <div class="card"><h2>學生名單與表現</h2><p class="note">「需關懷」：出席率低於 50%，或已作答 5 題以上且答對率低於 50%。點學生姓名看各集答對率與弱項。</p><table id="tb-stu"></table></div>
+    <div class="card" id="stu-detail" hidden></div>
+  </section>
+
+  <section id="t-speed" class="tab" hidden>
+    <div class="card"><h2>學生：平均作答秒數 × 答對率</h2><div id="c-stu-speed" class="chart"></div><p class="note">十字線為全班中位數。右上「思考型」答得慢但答得對；左下「可能用猜」答得快但常錯。</p></div>
+    <div class="card"><h2>四象限名單</h2><div id="quad-lists" class="quad-lists"></div></div>
+    <div class="card"><h2>題目：平均作答秒數 × 答對率</h2><div id="c-q-speed" class="chart"></div><p class="note">右下角的題目答得久又答錯多，可能題意不清或概念困難；左下角答得快卻錯多，可能有強烈誘答。</p></div>
+    <div class="card"><h2>答對與答錯的平均秒數</h2><table id="tb-qspeed"></table></div>
+  </section>
+</div>
+</main><script type="module" src="dist/dashboard.js"></script></body></html>
