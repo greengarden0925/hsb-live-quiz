@@ -23,7 +23,7 @@ export function tierFor(i, n) {
 
 // ---------- 材質 ----------
 function toonGradient() {
-  const data = new Uint8Array([90, 170, 255]);
+  const data = new Uint8Array([120, 190, 255]);
   const t = new THREE.DataTexture(data, 3, 1, THREE.RedFormat);
   t.minFilter = t.magFilter = THREE.NearestFilter;
   t.needsUpdate = true;
@@ -78,62 +78,87 @@ const PALETTE = [0xff5d73, 0x4cc9f0, 0xffd166, 0x06d6a0, 0xb388ff, 0xff9f1c];
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
 // ---------- 熊本體 ----------
-function buildBear() {
-  const BLACK = 0x1d1d22, CREAM = 0xf4e7c5, TAN = 0xc79a6b;
+// 依「台灣黑熊 Mascot 轉面圖」重建：圓胖梨形身體、寬圓頭、米色粗 V 字、
+// 白眼珠＋大黑瞳（兩顆高光）、粉腮紅、棕褐口鼻＋微笑、棕褐耳內／掌心／腳掌、背後小圓尾。
+export const BEAR_COLORS = { BLACK: 0x1f1f27, TAN: 0xd7a87a, CREAM: 0xfff4de, PINK: 0xe07b94, WHITE: 0xffffff };
+export function buildBear() {
+  const { BLACK, TAN, CREAM, PINK } = BEAR_COLORS;
   const root = new THREE.Group();
   const body = new THREE.Group(); root.add(body);
-  const bodyMat = toon(BLACK);
-  const torso = new THREE.Mesh(new THREE.SphereGeometry(0.9, 32, 24), bodyMat);
-  torso.scale.set(1, 1.08, 0.9); torso.position.y = 0.95; body.add(torso);
+  const bodyMat = toon(BLACK, { emissive: 0x12121a });
+  const tanMat = toon(TAN);
+  const ell = (mat, rx, ry, rz, x, y, z, parent) => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 28), mat);
+    m.scale.set(rx, ry, rz); m.position.set(x, y, z); parent.add(m); return m;
+  };
 
-  // 胸前白色 V 字（台灣黑熊特徵）
-  const vCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-0.42, 1.38, 0.66), new THREE.Vector3(-0.18, 1.05, 0.8), new THREE.Vector3(0, 0.92, 0.82),
-    new THREE.Vector3(0.18, 1.05, 0.8), new THREE.Vector3(0.42, 1.38, 0.66),
-  ]);
-  const chestV = new THREE.Mesh(new THREE.TubeGeometry(vCurve, 40, 0.075, 10, false), toon(CREAM));
+  // 軀幹：上身 + 較寬的下腹（梨形），在 y=0 著地
+  const BELLY = { rx: 1.0, ry: 0.72, rz: 0.96, cy: 0.72 };
+  const UPPER = { rx: 0.84, ry: 0.96, rz: 0.84, cy: 1.1 };
+  const torso = ell(bodyMat, UPPER.rx, UPPER.ry, UPPER.rz, 0, UPPER.cy, 0, body);
+  ell(bodyMat, BELLY.rx, BELLY.ry, BELLY.rz, 0, BELLY.cy, 0, body);
+  // 取軀幹表面的 z，讓 V 字貼著肚子
+  const surfZ = (x, y) => {
+    const f = (E) => { const v = 1 - (x / E.rx) ** 2 - ((y - E.cy) / E.ry) ** 2; return v > 0 ? E.rz * Math.sqrt(v) : 0; };
+    return Math.max(f(UPPER), f(BELLY));
+  };
+
+  // 胸前米色 V 字：粗、兩端圓、尖端略圓
+  const pts = [];
+  for (let k = 0; k <= 28; k++) {
+    const x = -0.43 + (0.86 * k) / 28;
+    const y = 0.78 + 1.3 * (Math.sqrt(x * x + 0.018) - Math.sqrt(0.018));
+    pts.push(new THREE.Vector3(x, y + 0.02, surfZ(x, y) + 0.01));
+  }
+  const vMat = toon(CREAM);
+  const chestV = new THREE.Group();
+  chestV.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 56, 0.095, 14, false), vMat));
+  for (const p of [pts[0], pts[pts.length - 1]]) {
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.095, 16, 12), vMat); cap.position.copy(p); chestV.add(cap);
+  }
   body.add(chestV);
 
-  // 頭
-  const head = new THREE.Group(); head.position.y = 2.05; body.add(head);
-  const skull = new THREE.Mesh(new THREE.SphereGeometry(0.78, 32, 24), bodyMat);
-  skull.scale.set(1.08, 0.95, 0.95); head.add(skull);
+  // 小圓尾
+  ell(bodyMat, 0.2, 0.2, 0.18, 0, 0.62, -0.93, body);
+
+  // 頭：寬圓、略扁
+  const head = new THREE.Group(); head.position.y = 2.08; body.add(head);
+  ell(bodyMat, 0.84, 0.74, 0.78, 0, 0, 0, head);
   for (const s of [-1, 1]) {
-    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.27, 20, 16), bodyMat);
-    ear.position.set(0.58 * s, 0.6, -0.05); ear.scale.set(1, 1, 0.6); head.add(ear);
-    const inner = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 12), toon(TAN));
-    inner.position.set(0.58 * s, 0.6, 0.1); inner.scale.set(1, 1, 0.4); head.add(inner);
+    const ear = ell(bodyMat, 0.27, 0.27, 0.17, 0.6 * s, 0.58, -0.04, head); ear.rotation.z = -0.25 * s;
+    const inner = ell(tanMat, 0.15, 0.15, 0.06, 0.6 * s, 0.57, 0.1, head); inner.rotation.z = -0.25 * s;
   }
-  const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.36, 24, 16), toon(TAN));
-  muzzle.position.set(0, -0.2, 0.6); muzzle.scale.set(1.1, 0.75, 0.75); head.add(muzzle);
-  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 12), toon(0x111111));
-  nose.position.set(0, -0.08, 0.86); nose.scale.set(1.3, 0.85, 0.8); head.add(nose);
-  const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.022, 8, 20, Math.PI), toon(0x3a1f14));
-  mouth.position.set(0, -0.26, 0.85); mouth.rotation.z = Math.PI; head.add(mouth);
+  // 棕褐口鼻（略突出）、黑鼻、微笑
+  ell(tanMat, 0.44, 0.36, 0.34, 0, -0.24, 0.6, head);
+  const nose = ell(toon(0x14141a), 0.12, 0.085, 0.08, 0, -0.07, 0.93, head);
+  nose.rotation.x = -0.1;
+  const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.02, 8, 24, Math.PI), toon(0x4a2a1a));
+  mouth.position.set(0, -0.3, 0.945); mouth.rotation.z = Math.PI; head.add(mouth);
+  // 眼睛：白眼珠＋大黑瞳＋兩顆高光；粉腮紅
   const eyes = [];
+  const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   for (const s of [-1, 1]) {
-    const eye = new THREE.Group(); eye.position.set(0.3 * s, 0.12, 0.66); head.add(eye);
-    const white = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), toon(0xffffff)); white.scale.z = 0.5; eye.add(white);
-    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.085, 16, 12), toon(0x000000)); pupil.position.z = 0.05; pupil.scale.z = 0.5; eye.add(pupil);
-    const glint = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    glint.position.set(0.03, 0.04, 0.1); eye.add(glint);
+    const eye = new THREE.Group(); eye.position.set(0.32 * s, 0.1, 0.69); eye.rotation.y = 0.28 * s; head.add(eye);
+    ell(toon(0xffffff), 0.15, 0.15, 0.07, 0, 0, 0, eye);
+    ell(toon(0x050507), 0.1, 0.105, 0.06, 0, -0.005, 0.03, eye);
+    const g1 = new THREE.Mesh(new THREE.SphereGeometry(0.036, 12, 10), glintMat); g1.position.set(0.035, 0.045, 0.085); eye.add(g1);
+    const g2 = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8), glintMat); g2.position.set(-0.04, -0.04, 0.085); eye.add(g2);
     eyes.push(eye);
-    const blush = new THREE.Mesh(new THREE.CircleGeometry(0.09, 20), new THREE.MeshBasicMaterial({ color: 0xff8fa3, transparent: true, opacity: 0.75 }));
-    blush.position.set(0.46 * s, -0.12, 0.66); blush.rotation.y = 0.5 * s; head.add(blush);
+    const blush = ell(toon(PINK), 0.15, 0.115, 0.04, 0.585 * s, -0.12, 0.535, head); blush.rotation.y = 0.74 * s;
   }
 
-  // 四肢（以關節為軸心）
-  const limb = (r, len) => new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 8, 16), bodyMat);
+  // 四肢（以關節為軸心；手臂短胖，掌心棕褐）
   const arms = [-1, 1].map((s) => {
-    const sh = new THREE.Group(); sh.position.set(0.82 * s, 1.35, 0); body.add(sh);
-    const a = limb(0.22, 0.5); a.position.y = -0.38; sh.add(a);
-    const paw = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 12), toon(TAN)); paw.position.set(0, -0.7, 0.1); paw.scale.z = 0.5; sh.add(paw);
+    const sh = new THREE.Group(); sh.position.set(0.78 * s, 1.4, 0.04); body.add(sh);
+    const a = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.28, 10, 20), bodyMat); a.position.y = -0.3; sh.add(a);
+    const paw = ell(tanMat, 0.15, 0.15, 0.08, 0, -0.5, 0.2, sh); paw.rotation.x = -0.2;
     return sh;
   });
+  // 腿＋圓腳，腳尖前有棕褐腳掌
   const legs = [-1, 1].map((s) => {
-    const hip = new THREE.Group(); hip.position.set(0.42 * s, 0.35, 0); body.add(hip);
-    const l = limb(0.25, 0.3); l.position.y = -0.22; hip.add(l);
-    const sole = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), toon(TAN)); sole.position.set(0, -0.4, 0.2); sole.scale.set(1, 0.7, 0.4); hip.add(sole);
+    const hip = new THREE.Group(); hip.position.set(0.52 * s, 0.5, 0.14); body.add(hip);
+    ell(bodyMat, 0.33, 0.2, 0.42, 0, -0.3, 0.2, hip);
+    ell(tanMat, 0.2, 0.14, 0.05, 0, -0.27, 0.6, hip);
     return hip;
   });
 
@@ -155,7 +180,7 @@ function buildOutfits(bear) {
   // 口罩
   o.mask = new THREE.Group();
   const cloth = new THREE.Mesh(new THREE.SphereGeometry(0.4, 24, 16), toon(0x9fd8f5));
-  cloth.scale.set(1.18, 0.85, 0.82); cloth.position.set(0, -0.16, 0.64); o.mask.add(cloth);
+  cloth.scale.set(1.3, 0.9, 0.95); cloth.position.set(0, -0.24, 0.7); o.mask.add(cloth);
   for (const dy of [-0.08, 0.04]) {
     const fold = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.012, 6, 30, Math.PI * 0.7), toon(0x6fb7e0));
     fold.position.set(0, -0.16 + dy, 0.68); fold.rotation.set(0, 0, Math.PI * 1.15); fold.scale.set(1.1, 0.25, 1); o.mask.add(fold);
@@ -177,9 +202,9 @@ function buildOutfits(bear) {
   const board = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.06, 1.35), toon(0x1b1f3b)); board.position.y = 0.88; board.rotation.y = Math.PI / 4; o.gradCap.add(board);
   const tassel = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.06, 0.45, 8), gold); tassel.position.set(0.62, 0.66, 0.2); o.gradCap.add(tassel);
   // 披風（掛在身體上，會飄動）
-  const capeGeo = new THREE.PlaneGeometry(1.7, 1.9, 12, 12);
+  const capeGeo = new THREE.PlaneGeometry(2.2, 1.9, 12, 12);
   o.cape = new THREE.Mesh(capeGeo, toon(0xe63946, { side: THREE.DoubleSide }));
-  o.cape.position.set(0, 0.85, -0.78); o.cape.userData.base = capeGeo.attributes.position.array.slice();
+  o.cape.position.set(0, 0.9, -0.97); o.cape.userData.base = capeGeo.attributes.position.array.slice();
   o.capeOnBody = true;
   // 墨鏡
   o.sunglasses = new THREE.Group();
@@ -196,10 +221,10 @@ function buildOutfits(bear) {
   // 彩虹圍巾
   o.scarf = new THREE.Group();
   PALETTE.slice(0, 4).forEach((c, k) => {
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.07, 10, 36), toon(c));
-    ring.rotation.x = Math.PI / 2; ring.position.y = 1.62 - k * 0.07; o.scarf.add(ring);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.84, 0.075, 10, 40), toon(c));
+    ring.rotation.x = Math.PI / 2; ring.scale.set(1, 0.92, 1); ring.position.y = 1.5 - k * 0.07; o.scarf.add(ring);
   });
-  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.6, 0.08), toon(PALETTE[0])); tail.position.set(0.35, 1.25, 0.62); tail.rotation.z = 0.2; o.scarf.add(tail);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.6, 0.08), toon(PALETTE[0])); tail.position.set(0.4, 1.1, 0.8); tail.rotation.z = 0.2; o.scarf.add(tail);
   o.scarfOnBody = true;
   // 王冠
   o.crown = new THREE.Group();
@@ -335,7 +360,7 @@ export function createMascot(container, bubbleEl) {
   const rim = new THREE.DirectionalLight(0xb388ff, 1.2); rim.position.set(-4, 3, -3); scene.add(rim);
 
   // 地面陰影
-  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.9, 32), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18 }));
+  const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.15, 40), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.18 }));
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; scene.add(shadow);
 
   const bear = buildBear(); scene.add(bear.root);
@@ -348,8 +373,8 @@ export function createMascot(container, bubbleEl) {
   function setOutfit(list) {
     for (const [k, v] of Object.entries(outfits)) if (v instanceof THREE.Object3D) v.visible = list.includes(k);
     state.gold = list.includes('gold');
-    bear.bodyMat.color.set(state.gold ? 0x8a6a1a : 0x1d1d22);
-    bear.bodyMat.emissive.set(state.gold ? 0x5a3f00 : 0x000000);
+    bear.bodyMat.color.set(state.gold ? 0x8a6a1a : BEAR_COLORS.BLACK);
+    bear.bodyMat.emissive.set(state.gold ? 0x5a3f00 : 0x12121a);
   }
 
   let bubbleTimer = null;

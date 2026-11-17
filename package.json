@@ -5,7 +5,7 @@
   "scripts": {
     "test:unit": "vitest run tests/scoring.test.js tests/bank-schema.test.js tests/analytics.test.js",
     "test:emu": "firebase emulators:exec --only database --project demo-hsb-quiz \"vitest run\"",
-    "build": "esbuild src/host.js src/play.js src/mascot-demo.js src/dashboard.js --bundle --splitting --format=esm --minify --target=es2020 --outdir=docs/dist"
+    "build": "rm -rf docs/dist && esbuild src/host.js src/play.js src/mascot-demo.js src/dashboard.js --bundle --splitting --format=esm --minify --target=es2020 --outdir=docs/dist"
   },
   "dependencies": {
     "firebase": "13.4.0",
