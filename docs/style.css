@@ -28,3 +28,12 @@ table { border-collapse: collapse; width:100%; background:#fff; } td, th { borde
 /* 投影用：老師端字更大 */
 body.host .qtext { font-size:2.2rem; } body.host .choice { font-size:1.6rem; min-height:110px; } body.host .timer { font-size:4rem; }
 @media (max-width: 600px) { .choices { grid-template-columns: 1fr; } .choice { min-height:64px; } }
+/* 吉祥物：老師端右下角 */
+#mascot-wrap { position:fixed; right:12px; bottom:12px; width:300px; height:400px; pointer-events:none; z-index:5; }
+#mascot-wrap[hidden] { display:none; }
+#mascot { position:absolute; inset:0; } #mascot canvas { width:100%; height:100%; display:block; }
+#mascot-bubble { position:absolute; left:10px; right:10px; top:0; background:#fff; color:var(--ink); border-radius:16px; padding:10px 14px; font-size:1.25rem; font-weight:700; text-align:center; box-shadow:0 4px 14px rgba(0,0,0,.15); opacity:0; transform:translateY(8px) scale(.95); transition:.25s; z-index:1; }
+#mascot-bubble.on { opacity:1; transform:none; }
+#mascot-bubble::after { content:""; position:absolute; left:50%; bottom:-10px; margin-left:-10px; border:10px solid transparent; border-bottom:0; border-top-color:#fff; }
+#mascot-toggle { position:fixed; right:12px; bottom:12px; z-index:6; background:rgba(255,255,255,.8); border:1px solid #ccc; border-radius:20px; padding:4px 10px; font-size:.9rem; }
+@media (min-width: 1100px) { body.host.has-mascot main { padding-right: 320px; } }

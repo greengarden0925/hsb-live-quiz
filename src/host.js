@@ -8,6 +8,35 @@ import { qKey, displayId } from './keys.js';
 import { $, show, esc, LABELS, choiceButtonsHtml, stamp, localDateTime } from './ui.js';
 
 const S = { uid: null, cfg: {}, banks: {}, pin: null, bank: null, meta: null, current: null, players: {}, presence: 0, answeredNow: 0, offset: 0, timer: null, busy: false, rows: [], watched: [] };
+// ---------- 吉祥物（延遲載入，失敗不影響搶答） ----------
+const M = { obj: null, last: ['idle', {}], off: false };
+try { M.off = localStorage.getItem('hsb-mascot-off') === '1'; } catch (e) { /* 無痕模式 */ }
+function mascot(name, opts = {}) {
+  M.last = [name, opts];
+  if (M.obj) M.obj.set(name, opts);
+}
+function mascotTension(on) { if (M.obj) M.obj.setTension(on); }
+function startMascot() {
+  if (M.off || M.obj || M.loading) return;
+  M.loading = true;
+  import('./mascot.js').then(({ createMascot }) => {
+    $('#mascot-wrap').hidden = false;
+    document.body.classList.add('has-mascot');
+    M.obj = createMascot($('#mascot'), $('#mascot-bubble'));
+    M.obj.set(...M.last);
+  }).catch(() => { $('#mascot-wrap').hidden = true; }).finally(() => { M.loading = false; });
+}
+function toggleMascot() {
+  M.off = !M.off;
+  try { localStorage.setItem('hsb-mascot-off', M.off ? '1' : '0'); } catch (e) { /* 無痕模式 */ }
+  $('#mascot-toggle').textContent = M.off ? '顯示熊熊' : '隱藏熊熊';
+  if (M.off) {
+    if (M.obj) { M.obj.dispose(); M.obj = null; }
+    $('#mascot-wrap').hidden = true; document.body.classList.remove('has-mascot');
+  } else startMascot();
+}
+$('#mascot-toggle').onclick = toggleMascot;
+
 const roomRef = (p) => ref(db, `rooms/${S.pin}/${p}`);
 const serverNow = () => Date.now() + S.offset;
 
@@ -23,6 +52,9 @@ onAuthStateChanged(auth, async (user) => {
   const isAdmin = (await get(ref(db, `admins/${user.uid}`))).val() === true;
   if (!isAdmin) { $('#login-err').textContent = `此帳號尚未設為老師。請把這個 UID 加入資料庫 /admins：\n${user.uid}`; return show('s-login'); }
   S.cfg = (await get(ref(db, 'config'))).val() || {};
+  $('#mascot-toggle').hidden = false;
+  $('#mascot-toggle').textContent = M.off ? '顯示熊熊' : '隱藏熊熊';
+  startMascot();
   await loadSetup();
 });
 
@@ -40,6 +72,7 @@ async function loadSetup() {
     : '<li>沒有未結束的場次</li>';
   $('#resume').querySelectorAll('button').forEach((b) => (b.onclick = () => resumeRoom(b.dataset.pin)));
   $('#panel').hidden = true;
+  mascot('idle');
   show('s-setup');
 }
 
@@ -138,6 +171,7 @@ function enterLobby() {
   $('#lobby-title').textContent = `${S.bank.ep} ${S.bank.title}`;
   $('#lobby-pin').textContent = S.pin;
   $('#lobby-url').textContent = url;
+  mascot('lobby');
   show('s-lobby');
 }
 $('#btn-start').onclick = () => startQuestion(0);
@@ -175,8 +209,10 @@ function showQuestion() {
   S.timer = setInterval(() => {
     const leftMs = end - serverNow();
     $('#h-timer').textContent = Math.max(0, Math.ceil(leftMs / 1000));
+    mascotTension(leftMs > 0 && leftMs <= 5000);
     if (leftMs <= -1200) closeQuestion(); // 規則允許 1 秒緩衝，多等 0.2 秒再收卷
   }, 200);
+  mascot('question', { i: c.qIndex, n: S.bank.questions.length });
   show('s-question');
 }
 
@@ -188,6 +224,7 @@ $('#btn-close').onclick = () => closeQuestion();
 async function closeQuestion() {
   if (S.busy) return; S.busy = true;
   clearInterval(S.timer);
+  mascotTension(false);
   const c = S.current, q = S.bank.questions[c.qIndex];
   const qa = (await get(roomRef(`answers/${c.qKey}`))).val() || {};
   await update(ref(db, `rooms/${S.pin}`), {
@@ -208,6 +245,8 @@ async function showReveal() {
   $('#rv-choices').innerHTML = choiceButtonsHtml(q.options, { disabled: true });
   $(`#rv-choices .choice[data-i="${q.answer}"]`).classList.add('correct');
   $('#rv-expl').textContent = `✔ ${LABELS[q.answer]}｜${q.explanation}`;
+  const total = rv.counts.reduce((a, b) => a + b, 0);
+  mascot('reveal', { rate: total ? rv.counts[q.answer] / total : null });
   show('s-reveal');
 }
 $('#btn-board').onclick = () => computeScores().then(showBoard);
@@ -227,6 +266,7 @@ async function showBoard() {
   if (last) return showFinal();
   $('#board').innerHTML = S.rows.slice(0, 5).map((r) => `<li><span>${r.rank}. ${esc(r.name)}</span><span>${r.total}</span></li>`).join('');
   $('#btn-next').textContent = `下一題（第 ${S.meta.qIndex + 2} 題）`;
+  mascot('board');
   show('s-board');
 }
 async function computeScoresReadOnly() {
@@ -285,6 +325,7 @@ function showFinal() {
   $('#final-title').textContent = `${S.bank.ep} ${S.bank.title}｜最終排行榜`;
   $('#podium').innerHTML = order.map((r, k) => (r ? `<div class="${cls[k]}">${r.rank}<br>${esc(r.name)}<br>${r.total}</div>` : '')).join('');
   $('#final-table').innerHTML = '<tr><th>名次</th><th>姓名</th><th>答對</th><th>總分</th></tr>' + S.rows.map((r) => `<tr><td>${r.rank}</td><td>${esc(r.name)}</td><td>${r.correct}</td><td>${r.total}</td></tr>`).join('');
+  mascot('final');
   show('s-final');
   sendToSheet();
 }

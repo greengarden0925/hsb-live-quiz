@@ -5,11 +5,12 @@
   "scripts": {
     "test:unit": "vitest run tests/scoring.test.js tests/bank-schema.test.js",
     "test:emu": "firebase emulators:exec --only database --project demo-hsb-quiz \"vitest run\"",
-    "build": "esbuild src/host.js src/play.js --bundle --format=esm --minify --target=es2020 --outdir=docs/dist"
+    "build": "esbuild src/host.js src/play.js src/mascot-demo.js --bundle --splitting --format=esm --minify --target=es2020 --outdir=docs/dist"
   },
   "dependencies": {
     "firebase": "13.4.0",
-    "qrcode-generator": "2.0.4"
+    "qrcode-generator": "2.0.4",
+    "three": "0.187.0"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "6.0.0",
