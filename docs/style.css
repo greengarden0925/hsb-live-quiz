@@ -1,0 +1,30 @@
+:root { --a:#e21b3c; --b:#1368ce; --c:#d89e00; --d:#26890c; --bg:#f4f1fa; --ink:#222; --brand:#46178f; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif; background:var(--bg); color:var(--ink); }
+main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 1.6rem; } button { font: inherit; cursor: pointer; }
+.btn, section > button { background: var(--brand); color:#fff; border:0; border-radius:10px; padding:12px 22px; font-size:1.1rem; margin:6px 4px; }
+.secondary { background:#777 !important; }
+.link { background:none; border:0; color:var(--brand); text-decoration:underline; padding:0 4px; }
+input, select { font-size:1.3rem; padding:10px; border-radius:8px; border:2px solid #ccc; width:100%; max-width:420px; }
+.err { color:#c00; white-space: pre-line; } .msg { white-space: pre-line; }
+.choices { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px; }
+.choice { display:flex; align-items:center; gap:10px; border:0; border-radius:12px; color:#fff; padding:16px; min-height:84px; text-align:left; font-size:1.15rem; }
+.choice.c0{background:var(--a)} .choice.c1{background:var(--b)} .choice.c2{background:var(--c)} .choice.c3{background:var(--d)}
+.choice .shape { font-size:1.6rem; } .choice .lbl { font-weight:700; } .choice[disabled]{ opacity:.45; }
+.choice.picked { outline: 6px solid #000; opacity:1; } .choice.correct { outline: 6px solid #fff; box-shadow:0 0 0 10px #2ecc71; opacity:1; }
+.timer { font-size:2.4rem; font-weight:800; color:var(--brand); }
+.qtext { font-size:1.35rem; font-weight:700; line-height:1.5; }
+.bars { display:grid; grid-template-columns: repeat(4,1fr); gap:16px; align-items:end; height:260px; margin:16px 0; }
+.bar { border-radius:8px 8px 0 0; color:#fff; text-align:center; font-weight:800; font-size:1.4rem; padding-top:6px; min-height:36px; }
+.board { list-style:none; padding:0; font-size:1.5rem; } .board li { display:flex; justify-content:space-between; background:#fff; margin:8px 0; padding:12px 18px; border-radius:10px; }
+.podium { display:flex; justify-content:center; align-items:end; gap:16px; margin:20px 0; }
+.podium div { background:var(--brand); color:#fff; width:200px; text-align:center; border-radius:10px 10px 0 0; padding:12px; font-size:1.3rem; }
+.podium .p1{height:220px} .podium .p2{height:170px} .podium .p3{height:130px}
+#qr svg { width: 360px; height: 360px; background:#fff; }
+.pin { font-size:4rem; font-weight:900; letter-spacing:.2em; color:var(--brand); }
+.players { display:flex; flex-wrap:wrap; gap:8px; list-style:none; padding:0; } .players li { background:#fff; padding:6px 12px; border-radius:20px; }
+table { border-collapse: collapse; width:100%; background:#fff; } td, th { border:1px solid #ddd; padding:6px 10px; text-align:left; }
+/* 投影用：老師端字更大 */
+body.host .qtext { font-size:2.2rem; } body.host .choice { font-size:1.6rem; min-height:110px; } body.host .timer { font-size:4rem; }
+@media (max-width: 600px) { .choices { grid-template-columns: 1fr; } .choice { min-height:64px; } }
