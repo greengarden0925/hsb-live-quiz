@@ -183,11 +183,16 @@ function buildOutfits(bear) {
   o.capeOnBody = true;
   // 墨鏡
   o.sunglasses = new THREE.Group();
+  // 彩色墨鏡：桃紅鏡片＋金色鏡框（避免黑色鏡片在黑熊臉上看不見）
   for (const s of [-1, 1]) {
-    const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.17, 0.05, 24), toon(0x111111, { emissive: 0x111133 }));
-    lens.rotation.x = Math.PI / 2; lens.position.set(0.3 * s, 0.13, 0.76); lens.scale.set(1.2, 1, 0.85); o.sunglasses.add(lens);
+    const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.17, 0.05, 24), toon(0xff4fa3, { emissive: 0x7a1048, emissiveIntensity: 0.6 }));
+    lens.rotation.x = Math.PI / 2; lens.position.set(0.3 * s, 0.13, 0.8); lens.scale.set(1.2, 1, 0.85); o.sunglasses.add(lens);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.025, 8, 28), toon(0xffc93c, { emissive: 0x6b4a00 }));
+    rim.position.set(0.3 * s, 0.13, 0.82); rim.scale.set(1.2, 0.85, 1); o.sunglasses.add(rim);
+    const shine = new THREE.Mesh(new THREE.CircleGeometry(0.045, 12), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 }));
+    shine.position.set(0.3 * s - 0.08, 0.19, 0.835); o.sunglasses.add(shine);
   }
-  const sbar = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 0.05), toon(0x111111)); sbar.position.set(0, 0.24, 0.78); o.sunglasses.add(sbar);
+  const sbar = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 0.05), toon(0xffc93c, { emissive: 0x6b4a00 })); sbar.position.set(0, 0.24, 0.82); o.sunglasses.add(sbar);
   // 彩虹圍巾
   o.scarf = new THREE.Group();
   PALETTE.slice(0, 4).forEach((c, k) => {
