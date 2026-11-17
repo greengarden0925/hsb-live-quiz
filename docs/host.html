@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>課堂搶答｜老師端</title><link rel="stylesheet" href="style.css"></head>
+<body class="host"><main>
+<details id="panel" hidden><summary id="panel-sum">學生名單</summary><ul class="players" id="panel-list"></ul></details>
+
+<section id="s-login" data-screen><h1>老師登入</h1><button id="btn-login">使用 Google 帳號登入</button><p class="err" id="login-err"></p></section>
+
+<section id="s-setup" data-screen hidden>
+  <h1>建立場次</h1>
+  <select id="ep"></select> <button id="btn-create">建立場次</button>
+  <h2>接續未結束的場次</h2><ul id="resume"></ul>
+  <h2>管理</h2>
+  <button id="btn-roster" class="secondary">從 Google Sheet 同步名單</button>
+  <label class="btn secondary">上傳題庫 JSON<input id="bank-files" type="file" accept=".json" multiple hidden></label>
+  <p class="msg" id="setup-msg"></p>
+</section>
+
+<section id="s-lobby" data-screen hidden>
+  <h1 id="lobby-title"></h1>
+  <div style="display:flex;gap:32px;align-items:center;flex-wrap:wrap">
+    <div id="qr"></div>
+    <div><p>掃 QR code，或開啟網址輸入場次碼</p><div class="pin" id="lobby-pin"></div><p id="lobby-url"></p><h2 id="lobby-count"></h2></div>
+  </div>
+  <ul class="players" id="lobby-players"></ul>
+  <button id="btn-start">開始第 1 題</button>
+</section>
+
+<section id="s-question" data-screen hidden>
+  <div style="display:flex;justify-content:space-between;align-items:center"><div class="timer" id="h-timer"></div><h2 id="h-answered"></h2></div>
+  <p class="qtext" id="h-q"></p><div class="choices" id="h-choices"></div>
+  <button id="btn-close" class="secondary">提前結束作答</button>
+</section>
+
+<section id="s-reveal" data-screen hidden>
+  <p class="qtext" id="rv-q"></p>
+  <div class="bars" id="rv-bars"></div>
+  <div class="choices" id="rv-choices"></div>
+  <h2 id="rv-expl"></h2>
+  <button id="btn-board">看排名</button>
+</section>
+
+<section id="s-board" data-screen hidden>
+  <h1>目前前 5 名</h1><ol class="board" id="board"></ol>
+  <button id="btn-next">下一題</button>
+</section>
+
+<section id="s-final" data-screen hidden>
+  <h1 id="final-title">最終排行榜</h1>
+  <div class="podium" id="podium"></div>
+  <p class="msg" id="sheet-msg"></p>
+  <button id="btn-csv" class="secondary">下載 CSV</button> <button id="btn-resend" class="secondary" hidden>重新寫入 Google Sheet</button> <button id="btn-home" class="secondary">回到建立場次</button>
+  <table id="final-table"></table>
+</section>
+</main><script type="module" src="dist/host.js"></script></body></html>
